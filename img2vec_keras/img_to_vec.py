@@ -3,6 +3,7 @@
 
 from tensorflow import keras
 
+from tensorflow.keras.applications import mobilenet_v2
 from tensorflow.keras.applications import resnet50
 from tensorflow.keras.preprocessing import image
 from tensorflow.keras.models import Model
@@ -14,10 +15,19 @@ _IMAGE_NET_TARGET_SIZE = (224, 224)
 
 class Img2Vec(object):
 
-    def __init__(self):
-        
+    def __init__(self, model_name='resnet'):
+        if (model_name == 'mobilenet'):
+            print("Using MobileNetV2 to vectorize images")
+            model = mobilenet_v2.MobileNetV2(weights='imagenet')
+            layer_name = 'global_average_pooling2d'
+            self.preprocess_fn = mobilenet_v2.preprocess_input
+        else:
+            print("Using ResNet50 to vectorize images")
         model = resnet50.ResNet50(weights='imagenet')
         layer_name = 'avg_pool'
+            self.preprocess_fn = resnet50.preprocess_input
+        o = model.get_layer(layer_name).output
+        self.vec_len = o.shape[1]
         self.intermediate_layer_model = Model(inputs=model.input, 
                                               outputs=model.get_layer(layer_name).output)
 
